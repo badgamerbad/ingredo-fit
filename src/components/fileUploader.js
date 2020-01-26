@@ -27,9 +27,11 @@ export default class FileUploader extends Component {
   async handleSubmit(event) {
     event.preventDefault()
 
+    let { onLoadStateChange } = this.props
+
     try {
-      let { onLoadStateChange } = this.props
       onLoadStateChange('25%') // start the loader
+
       const file = this.fileInput.files[0]
       const fileType = file.type
 
@@ -58,12 +60,15 @@ export default class FileUploader extends Component {
 
         // handle the error uploading the file to GCP Bucket
         if (putFileInGcpBucket.status !== 200) {
+          onLoadStateChange('100%')
           console.log(putFileInGcpBucket.statusText)
         }
         // fetch the url of the uploaded file and
         // the details of the Clarifai ingredients API
         else {
-          const {fetchUpdatedUserData} = this.props
+          onLoadStateChange('100%')
+
+          const { fetchUpdatedUserData } = this.props
           
           const fileName = getSignedUrlForStorage.data.uploadedFileName
           fetchUpdatedUserData(fileName)
@@ -71,6 +76,7 @@ export default class FileUploader extends Component {
       }
     }
     catch (exception) {
+      onLoadStateChange('100%')
       console.log(exception)
     }
   }
