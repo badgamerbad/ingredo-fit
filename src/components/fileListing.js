@@ -4,53 +4,27 @@ import axios from 'axios'
 import "./fileListing.scss"
 
 const deleteFile = async event => {
-	event.preventDefault()
-
 	let fileName = event.currentTarget.dataset.filename
 	let jwt = event.currentTarget.dataset.jwt
 
-	// let deleteFileStatus = await 
-	
-	// axios.delete(
-	// 	process.env.GATSBY_URL_DELETE_FILE, 
-	// 	{
-	// 		withCredentials: true,
-	// 		data: {
-	// 			foo: "bar"
-	// 		},
-	// 	},
-	// )
-	// .then(res => {
-	// 	return res.text()
-	// })
-	// .catch(error => {
-	// 	// handle error from aws lambda
-	// 	console.log(error)
-	// })
+	let deleteFileData = await fetch(
+		process.env.GATSBY_URL_DELETE_FILE, 
+		{
+			method: "POST",
+			body: JSON.stringify({
+				fileName, 
+				jwt
+			}),
+			credentials: 'include',
+		},
+	)
 
-	// if(deleteFileStatus.error) {
-	// 	console.log(deleteFileStatus.error)
-	// }
-	// else {
-	// 	console.log(deleteFileStatus.status)
-	// }
-
-	var data = {};
-	data.firstname = "John2";
-	data.lastname  = "Snow2";
-	var json = JSON.stringify(data);
-
-	// Delete a user
-	var url = process.env.GATSBY_URL_DELETE_FILE;
-	var xhr = new XMLHttpRequest();
-	xhr.withCredentials = true;
-	xhr.open("DELETE", url, true);
-	xhr.onload = function () {
-		if (xhr.readyState == 4 && xhr.status == "200")
-			console.log(xhr.responseText);
+	if(deleteFileData && deleteFileData.status == 204) {
+		console.log(deleteFileData.statusText)
 	}
-	xhr.send(json);
-
+	else {
+		console.log(deleteFileData)
+	}
 }
 
 export default function fileListing(props) {
