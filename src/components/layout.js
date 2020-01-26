@@ -10,67 +10,62 @@ import UserData from "./userData"
 import FileListing from "./fileListing"
 import FileUploader from "./fileUploader"
 
-const checkUser = (layoutThisObject) => {
-  fetch(
-    process.env.GATSBY_URL_USER_DATA,
-    {
-      method: "GET",
-      credentials: 'include',
-    }
-  )
-  .then(res => {
-    return res.text()
-  })
-  .then(res => {
-    const decodedResponse = jwtDecode(res)
+const userLogin = async (layoutThisObject, payload) => {
+  try {
+    const userLoginData = await fetch(
+      payload.url,
+      {
+        method: payload.method,
+        body: payload.body,
+        credentials: 'include',
+      }
+    )
+    
+    const encodedUserLoginDataJwt = await userLoginData.text()
+    const decodedResponse = jwtDecode(encodedUserLoginDataJwt)
+
     // handle error from aws lambda githubAccessExchange
     if (decodedResponse.login) {
       layoutThisObject.setState({
         userData: decodedResponse,
-        jwt: res,
+        jwt: encodedUserLoginDataJwt,
       })
     }
     else {
       console.log(decodedResponse)
     }
-  })
-  .catch(error => {
-    // handle error from aws lambda
-    console.log(error)
-  })
+  }
+  catch(exception) {
+    console.log(exception)
+  }
 }
-const userLogin = (layoutThisObject) => {
-  fetch(
-    process.env.GATSBY_URL_USER_LOGIN,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        "code": window.accessCode,
-        "state": window.accessRandomKey,
-      }),
-      credentials: 'include',
-    }
-  )
-  .then(res => {
-    return res.text()
-  })
-  .then(res => {
-    const decodedResponse = jwtDecode(res)
-    // handle error from aws lambda githubAccessExchange
-    if (decodedResponse.login) {
+const userLogout = async layoutThisObject => {
+  try {
+    const userLogoutData = await fetch(
+      process.env.GATSBY_URL_USER_LOGOUT,
+      {
+        method: "POST",
+        credentials: 'include'
+      }
+    )
+
+    if(userLogoutData && userLogoutData.status === 200) {
       layoutThisObject.setState({
-        userData: decodedResponse,
-        jwt: res,
+        width: '0%',
+        userData: {},
+        jwt: "",
       })
+
+      const resolvedUserLogoutData = await userLogoutData.text();
+      console.log(resolvedUserLogoutData)
     }
     else {
-      console.log(decodedResponse)
+      console.log(userLogoutData)
     }
-  })
-  .catch(error => {
-    // handle error from aws lambda
-    console.log(error)
-  })
+  }
+  catch (exception) {
+    console.log(exception);
+  }
 }
 
 const layoutContext = React.createContext()
@@ -84,12 +79,32 @@ class Layout extends React.Component {
       userData: {},
       jwt: "",
     }
+    this.userLogout = this.userLogout.bind(this)
   }
   componentDidMount() {
-    if(window.accessCode) 
-      userLogin(this)
-    else
-      checkUser(this)
+    let payload;
+    if(window.accessCode) {
+      payload = {
+        url: process.env.GATSBY_URL_USER_LOGIN,
+        method: "POST",
+        body: JSON.stringify({
+          "code": window.accessCode,
+          "state": window.accessRandomKey,
+        })
+      }  
+    } 
+    else{
+      payload = {
+        url: process.env.GATSBY_URL_USER_DATA,
+        method: "GET"
+      }
+    }
+
+    userLogin(this, payload)
+  }
+  userLogout() {
+    // global logout function
+    userLogout(this)
   }
   render() {
     return (
@@ -114,7 +129,7 @@ class Layout extends React.Component {
             >
               <html lang="en" />
             </Helmet>
-            <Header siteTitle={data.site.siteMetadata.title} userData={this.state.userData} />
+            <Header siteTitle={data.site.siteMetadata.title} userData={this.state.userData} userLogout={this.userLogout} />
             <UserData>
               <FileUploader />
               <FileListing userData={this.state.userData} jwt={this.state.jwt}/>
