@@ -38,12 +38,12 @@ export default function fileListing(props) {
 		props.fetchUploadedFileWithIngredients(fileName, props.jwt)
 	}
 	return (
-		<ul>
+		<ul className="uploaded-image-list">
 			{
 				props.userData ?
 					props.userData.filesList ?
 						props.userData.filesList.map(
-							(file, index) => <li key={index}><button onClick={seeImage} data-filename={file.name}>y</button> {file.name} <button data-filename={file.name} data-fileurl={file.url} onClick={deleteFile}>x</button></li>
+							(file, index) => <li className="uploaded-image-row" key={index}><button onClick={seeImage} data-filename={file.name}><img src={file.url} alt="uploaded image" /></button><button className="close" data-filename={file.name} data-fileurl={file.url} onClick={deleteFile}>x</button></li>
 						)
 						: ""
 					: ""
