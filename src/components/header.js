@@ -3,7 +3,7 @@ import { Link } from "gatsby"
 
 import "./header.scss"
 
-const Header = ({ siteTitle, userData, userLogin }) => { 
+const Header = ({ siteTitle, userData, userLogout }) => { 
   return (
     <div className="header">
       <div className="header-content">
@@ -21,7 +21,7 @@ const Header = ({ siteTitle, userData, userLogin }) => {
             </h1></li>
           <li>
             {
-              userData.avatar_url ? <button className="login-button"><img className="avatar-image" src={userData.avatar_url} alt="users avatar"/></button> : <Link className="login-button" to="/login">Login</Link>
+              userData.avatar_url ? <button onClick={userLogout} className="login-button"><img className="avatar-image" src={userData.avatar_url} alt="users avatar" /></button> : <Link className="login-button" to="/login">Login</Link>
             }
           </li>
         </ul>
