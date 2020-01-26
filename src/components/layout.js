@@ -59,6 +59,8 @@ const userLogout = async layoutThisObject => {
         ingredients: [],
       })
 
+      window.accessCode = null;
+
       const resolvedUserLogoutData = await userLogoutData.text();
       console.log(resolvedUserLogoutData)
     }
