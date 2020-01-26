@@ -71,7 +71,7 @@ export default class FileUploader extends Component {
           const { fetchUpdatedUserData } = this.props
           
           const fileName = getSignedUrlForStorage.data.uploadedFileName
-          fetchUpdatedUserData(fileName)
+          fetchUpdatedUserData(fileName, "upload")
         }
       }
     }

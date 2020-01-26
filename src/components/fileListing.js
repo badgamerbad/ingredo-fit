@@ -2,43 +2,48 @@ import React, { useState } from "react"
 
 import "./fileListing.scss"
 
-const deleteFile = async event => {
-	try {
-		let fileName = event.currentTarget.dataset.filename
-		let jwt = event.currentTarget.dataset.jwt
-
-		let deleteFileData = await fetch(
-			process.env.GATSBY_URL_DELETE_FILE,
-			{
-				method: "POST",
-				body: JSON.stringify({
-					fileName,
-					jwt
-				}),
-				credentials: 'include',
-			},
-		)
-
-		if (deleteFileData && deleteFileData.status === 204) {
-			console.log(deleteFileData.statusText)
-		}
-		else {
-			console.log(deleteFileData)
-		}
-	}
-	catch (exception) {
-		console.log(exception)
-	}
-}
-
 export default function fileListing(props) {
+	const deleteFile = async event => {
+		try {
+			let fileName = event.currentTarget.dataset.filename
+			let jwt = props.jwt
+	
+			let deleteFileData = await fetch(
+				process.env.GATSBY_URL_DELETE_FILE,
+				{
+					method: "POST",
+					body: JSON.stringify({
+						fileName,
+						jwt
+					}),
+					credentials: 'include',
+				},
+			)
+	
+			if (deleteFileData && deleteFileData.status === 204) {
+				console.log(deleteFileData.statusText)
+
+				props.fetchUpdatedUserData(fileName, "delete")
+			}
+			else {
+				console.log(deleteFileData)
+			}
+		}
+		catch (exception) {
+			console.log(exception)
+		}
+	}
+	const seeImage = async event => {
+		let fileName = event.currentTarget.dataset.filename
+		props.fetchUploadedFileWithIngredients(fileName, props.jwt)
+	}
 	return (
 		<ul>
 			{
 				props.userData ?
 					props.userData.filesList ?
 						props.userData.filesList.map(
-							(file, index) => <li key={index}>{file.name} <button data-filename={file.name} data-fileurl={file.url} data-jwt={props.jwt} onClick={deleteFile}>x</button></li>
+							(file, index) => <li key={index}><button onClick={seeImage} data-filename={file.name}>y</button> {file.name} <button data-filename={file.name} data-fileurl={file.url} onClick={deleteFile}>x</button></li>
 						)
 						: ""
 					: ""

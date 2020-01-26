@@ -84,6 +84,7 @@ class Layout extends React.Component {
     }
     this.userLogout = this.userLogout.bind(this)
     this.fetchUpdatedUserData = this.fetchUpdatedUserData.bind(this)
+    this.fetchUploadedFileWithIngredients = this.fetchUploadedFileWithIngredients.bind(this)
   }
   componentDidMount() {
     let payload;
@@ -110,13 +111,8 @@ class Layout extends React.Component {
     // global logout function
     userLogout(this)
   }
-  async fetchUpdatedUserData(fileName) {
+  async fetchUpdatedUserData(fileName, operation) {
     try {
-      this.setState({
-        uploadedImageUrl: "",
-        ingredients: [],
-      })
-
       const userData = await fetch(
         process.env.GATSBY_URL_USER_DATA,
         {
@@ -135,36 +131,50 @@ class Layout extends React.Component {
           jwt: encodedUserDataJwt,
         })
         
-        // get the uploaded image url and the clarifai ingredients 
-        let fetchUploadedImageData = await fetch(
-          process.env.GATSBY_URL_SIGNED_FILE_DATA_INGREDIENTS,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              fileName, 
-              jwt: encodedUserDataJwt,
-            }),
-            credentials: 'include'
-          }
-        )
-        if (fetchUploadedImageData.status !== 200) {
-          console.log(fetchUploadedImageData.statusText)
-        }
-        else {
-          // TODO: handle the loader effect
-          // onLoadStateChange('100%')
-
-          const imageDataToText = await fetchUploadedImageData.text()
-          const parsedImageData = JSON.parse(imageDataToText)
-
-          this.setState({
-            uploadedImageUrl: parsedImageData.url,
-            ingredients: parsedImageData.ingredients
-          })
-        }
+        if(operation == "upload")
+          this.fetchUploadedFileWithIngredients(fileName, encodedUserDataJwt)
       }
       else {
         console.log(decodedUserData)
+      }
+    }
+    catch (exception) {
+      console.log(exception)
+    }
+  }
+  async fetchUploadedFileWithIngredients(fileName, encodedUserDataJwt) {
+    try {
+      this.setState({
+        uploadedImageUrl: "",
+        ingredients: [],
+      })
+
+      // get the uploaded image url and the clarifai ingredients 
+      let fetchUploadedImageData = await fetch(
+        process.env.GATSBY_URL_SIGNED_FILE_DATA_INGREDIENTS,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            fileName,
+            jwt: encodedUserDataJwt,
+          }),
+          credentials: 'include'
+        }
+      )
+      if (fetchUploadedImageData.status !== 200) {
+        console.log(fetchUploadedImageData.statusText)
+      }
+      else {
+        // TODO: handle the loader effect
+        // onLoadStateChange('100%')
+
+        const imageDataToText = await fetchUploadedImageData.text()
+        const parsedImageData = JSON.parse(imageDataToText)
+
+        this.setState({
+          uploadedImageUrl: parsedImageData.url,
+          ingredients: parsedImageData.ingredients
+        })
       }
     }
     catch (exception) {
@@ -197,7 +207,7 @@ class Layout extends React.Component {
             <Header siteTitle={data.site.siteMetadata.title} userData={this.state.userData} userLogout={this.userLogout} />
             <UserData>
               <FileUploader uploadedImageUrl={this.state.uploadedImageUrl} ingredients={this.state.ingredients} fetchUpdatedUserData={this.fetchUpdatedUserData}/>
-              <FileListing userData={this.state.userData} jwt={this.state.jwt} fetchUpdatedUserData={this.fetchUpdatedUserData}/>
+              <FileListing userData={this.state.userData} jwt={this.state.jwt} fetchUpdatedUserData={this.fetchUpdatedUserData} fetchUploadedFileWithIngredients={this.fetchUploadedFileWithIngredients}/>
             </UserData>
           </layoutContext.Provider>
         )}
