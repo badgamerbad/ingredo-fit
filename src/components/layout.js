@@ -55,6 +55,8 @@ const userLogout = async layoutThisObject => {
         width: '0%',
         userData: {},
         jwt: "",
+        uploadedImageUrl: "",
+        ingredients: [],
       })
 
       const resolvedUserLogoutData = await userLogoutData.text();
