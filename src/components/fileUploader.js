@@ -13,8 +13,6 @@ export default class FileUploader extends Component {
     super(props)
     this.state = {
       progress: 0,
-      uploadedImage: null,
-      ingredients: [],
       fileSelected: false,
       fileName: '',
     }
@@ -29,93 +27,75 @@ export default class FileUploader extends Component {
   async handleSubmit(event) {
     event.preventDefault()
 
-    let { onLoadStateChange } = this.props
-    onLoadStateChange('25%') // start the loader
-    const file = this.fileInput.files[0]
-    const fileType = file.type
-    this.setState({
-      uploadedImage: null,
-      ingredients: [],
-    })
+    try {
+      let { onLoadStateChange } = this.props
+      onLoadStateChange('25%') // start the loader
+      const file = this.fileInput.files[0]
+      const fileType = file.type
 
-    // fetch the signed url for file upload
-    let getSignedUrlForStorage = await axios.get(
-      process.env.GATSBY_URL_SIGNED_FILE_UPLOAD,
-      {
-        params: {
-          fileType
-        },
-        withCredentials: true,
+      // fetch the signed url for file upload
+      let getSignedUrlForStorage = await axios.get(
+        process.env.GATSBY_URL_SIGNED_FILE_UPLOAD,
+        {
+          params: {
+            fileType
+          },
+          withCredentials: true,
+        }
+      )
+
+      // handle the error for fetching the signed URL
+      if (getSignedUrlForStorage.status !== 200) {
+        console.log(getSignedUrlForStorage.statusText)
       }
-    )
-
-    // handle the error for fetching the signed URL
-    if(getSignedUrlForStorage.status !== 200) {
-      console.log(getSignedUrlForStorage.statusText)
-    }
-    // PUT the file on GCP bucket
-    else {
-      let putFileInGcpBucket = await axios.put(getSignedUrlForStorage.data.uploadedFileData.url, file, {
-        headers: {
-          'Content-Type': fileType,
-        },
-      })
-
-      // handle the error uploading the file to GCP Bucket
-      if(putFileInGcpBucket.status !== 200) {
-        console.log(putFileInGcpBucket.statusText)
-      }
-      // fetch the url of the uploaded file and
-      // the details of the Clarifai ingredients API
+      // PUT the file on GCP bucket
       else {
-        // after fetching the clarifai ingredients 
-        // from the aws lambda api
-        let fetchUploadedImageData = await axios(
-          process.env.GATSBY_URL_SIGNED_FILE_DATA_INGREDIENTS,
-          {
-            params: {
-              fileName: getSignedUrlForStorage.data.uploadedFileData.uploadedFileName,
-            },
-            withCredentials: true,
-          }
-        )
-        if(fetchUploadedImageData.status !== 200) {
-          console.log(fetchUploadedImageData.statusText)
+        let putFileInGcpBucket = await axios.put(getSignedUrlForStorage.data.url, file, {
+          headers: {
+            'Content-Type': fileType,
+          },
+        })
+
+        // handle the error uploading the file to GCP Bucket
+        if (putFileInGcpBucket.status !== 200) {
+          console.log(putFileInGcpBucket.statusText)
         }
+        // fetch the url of the uploaded file and
+        // the details of the Clarifai ingredients API
         else {
-          this.setDataOfSelectedImage(fetchUploadedImageData.data.url, fetchUploadedImageData.data.ingredients)
+          const {fetchUpdatedUserData} = this.props
+          
+          const fileName = getSignedUrlForStorage.data.uploadedFileName
+          fetchUpdatedUserData(fileName)
         }
       }
+    }
+    catch (exception) {
+      console.log(exception)
     }
   }
   handleSelect() {
     this.fileInput.click()
   }
-  setDataOfSelectedImage(url, ingredients) {
-    let { onLoadStateChange } = this.props
-
-    onLoadStateChange('100%')
-    this.setState({
-      uploadedImage: url,
-      ingredients: ingredients
-    })
-  }
   render() {
-    let { uploadedImage, ingredients, fileSelected, fileName } = this.state
+    const { fileSelected, fileName } = this.state
+    const { uploadedImageUrl, ingredients } = this.props
+
     const submitBtnClasses = classNames('btn', 'btn-primary', {
       'btn-dsabled': !fileSelected,
     })
     const uploadDivClasses = classNames('upload', {
-      'centerly': !uploadedImage,
+      'centerly': !uploadedImageUrl,
     })
+
     return (
       <form onSubmit={this.handleSubmit}>
         <div className={uploadDivClasses} >
-          {uploadedImage ? (
+          {uploadedImageUrl ? (
             <div className="uploadedDetails">
               <div className="meal">
                 <div>
-                  <img src={uploadedImage} alt="" />
+                  <img src={uploadedImageUrl} alt="" />
                 </div>
               </div>
               <div className="ingredients">
@@ -210,7 +190,7 @@ export default class FileUploader extends Component {
                   className="fake-image-text"
                   type="text"
                   value={fileName}
-                  onChange={() => {}}
+                  onChange={() => { }}
                 />
               </li>
               <li>
@@ -235,9 +215,9 @@ export default class FileUploader extends Component {
         <div className="aboutApp">
           <h4>About App</h4>
           <p>
-            This app will help you keep track of what food items you are consuming, 
+            This app will help you keep track of what food items you are consuming,
             give you their calorie, nutritional value. Just upload a pic of your meal,
-            and let the app do its magic. It will give you a list of ingredients in your meal, 
+            and let the app do its magic. It will give you a list of ingredients in your meal,
             calories and nutrients of each item. This way you know what you are consuming.
           </p>
         </div>

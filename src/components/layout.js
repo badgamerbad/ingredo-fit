@@ -10,6 +10,7 @@ import UserData from "./userData"
 import FileListing from "./fileListing"
 import FileUploader from "./fileUploader"
 
+// sets the state with userData and JWT of userData
 const userLogin = async (layoutThisObject, payload) => {
   try {
     const userLoginData = await fetch(
@@ -78,8 +79,11 @@ class Layout extends React.Component {
 			width: '0%',
       userData: {},
       jwt: "",
+      ingredients: [],
+      uploadedImageUrl: "",
     }
     this.userLogout = this.userLogout.bind(this)
+    this.fetchUpdatedUserData = this.fetchUpdatedUserData.bind(this)
   }
   componentDidMount() {
     let payload;
@@ -106,6 +110,67 @@ class Layout extends React.Component {
     // global logout function
     userLogout(this)
   }
+  async fetchUpdatedUserData(fileName) {
+    try {
+      this.setState({
+        uploadedImageUrl: "",
+        ingredients: [],
+      })
+
+      const userData = await fetch(
+        process.env.GATSBY_URL_USER_DATA,
+        {
+          method: "GET",
+          credentials: 'include',
+        }
+      )
+
+      const encodedUserDataJwt = await userData.text()
+      const decodedUserData = jwtDecode(encodedUserDataJwt)
+
+      // handle error from aws lambda githubAccessExchange
+      if (decodedUserData.login) {
+        this.setState({
+          userData: decodedUserData,
+          jwt: encodedUserDataJwt,
+        })
+        
+        // get the uploaded image url and the clarifai ingredients 
+        let fetchUploadedImageData = await fetch(
+          process.env.GATSBY_URL_SIGNED_FILE_DATA_INGREDIENTS,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              fileName, 
+              jwt: encodedUserDataJwt,
+            }),
+            credentials: 'include'
+          }
+        )
+        if (fetchUploadedImageData.status !== 200) {
+          console.log(fetchUploadedImageData.statusText)
+        }
+        else {
+          // TODO: handle the loader effect
+          // onLoadStateChange('100%')
+
+          const imageDataToText = await fetchUploadedImageData.text()
+          const parsedImageData = JSON.parse(imageDataToText)
+
+          this.setState({
+            uploadedImageUrl: parsedImageData.url,
+            ingredients: parsedImageData.ingredients
+          })
+        }
+      }
+      else {
+        console.log(decodedUserData)
+      }
+    }
+    catch (exception) {
+      console.log(exception)
+    }
+  }
   render() {
     return (
       <StaticQuery
@@ -131,8 +196,8 @@ class Layout extends React.Component {
             </Helmet>
             <Header siteTitle={data.site.siteMetadata.title} userData={this.state.userData} userLogout={this.userLogout} />
             <UserData>
-              <FileUploader />
-              <FileListing userData={this.state.userData} jwt={this.state.jwt}/>
+              <FileUploader uploadedImageUrl={this.state.uploadedImageUrl} ingredients={this.state.ingredients} fetchUpdatedUserData={this.fetchUpdatedUserData}/>
+              <FileListing userData={this.state.userData} jwt={this.state.jwt} fetchUpdatedUserData={this.fetchUpdatedUserData}/>
             </UserData>
           </layoutContext.Provider>
         )}
