@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 
 import "./fileListing.scss"
 
@@ -43,7 +43,7 @@ export default function fileListing(props) {
 				props.userData ?
 					props.userData.filesList ?
 						props.userData.filesList.map(
-							(file, index) => <li className="uploaded-image-row" key={index}><button onClick={seeImage} data-filename={file.name}><img src={file.url} alt="uploaded image" /></button><button className="close" data-filename={file.name} data-fileurl={file.url} onClick={deleteFile}>x</button></li>
+							(file, index) => <li className="uploaded-image-row" key={index}><button onClick={seeImage} data-filename={file.name}><img src={file.url} alt="file url" /></button><button className="close" data-filename={file.name} data-fileurl={file.url} onClick={deleteFile}>x</button></li>
 						)
 						: ""
 					: ""

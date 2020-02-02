@@ -135,7 +135,7 @@ class Layout extends React.Component {
           jwt: encodedUserDataJwt,
         })
         
-        if(operation == "upload")
+        if(operation === "upload")
           this.fetchUploadedFileWithIngredients(fileName, encodedUserDataJwt)
       }
       else {
