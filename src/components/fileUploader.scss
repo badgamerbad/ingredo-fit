@@ -87,6 +87,7 @@ image {
         img {
           height: 100%;
           width: 100%;
+          object-fit: contain;
         }
         @media only screen and (max-width: map-get($map: $sizes, $key: hd)) {
           margin: 2em auto;
@@ -166,9 +167,4 @@ image {
   @media only screen and (max-width: map-get($map: $sizes, $key: mobile)) {
     margin-top: 15vh;
   }
-}
-.aboutApp {
-  text-align: center;
-  color: #fff;
-  padding: 1em;
 }

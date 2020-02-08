@@ -1,0 +1,27 @@
+$sizes: (
+  mobile: 540px,
+  hd: 1500px,
+);
+
+.login {
+  text-align: center;
+  margin: 5rem;
+  .login-button {
+    color: #fff;
+    font-size: 2rem;
+    background:#ff6151;
+    padding: 0.5rem 10rem;
+    text-decoration: none;
+    @media only screen and (max-width: map-get($map: $sizes, $key: mobile)) {
+      padding: 0.5rem 1rem;
+    }
+  }
+  @media only screen and (max-width: map-get($map: $sizes, $key: mobile)) {
+    margin: 5rem 1rem;
+  }
+}
+.aboutApp {
+  text-align: center;
+  color: #fff;
+  padding: 1em;
+}

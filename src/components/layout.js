@@ -9,6 +9,7 @@ import Header from "./header"
 import UserData from "./userData"
 import FileListing from "./fileListing"
 import FileUploader from "./fileUploader"
+import BeforeLogin from "./beforeLogin"
 
 // sets the state with userData and JWT of userData
 const userLogin = async (layoutThisObject, payload) => {
@@ -210,8 +211,10 @@ class Layout extends React.Component {
             </Helmet>
             <Header siteTitle={data.site.siteMetadata.title} userData={this.state.userData} userLogout={this.userLogout} />
             <UserData>
-              <FileUploader uploadedImageUrl={this.state.uploadedImageUrl} ingredients={this.state.ingredients} fetchUpdatedUserData={this.fetchUpdatedUserData}/>
-              <FileListing userData={this.state.userData} jwt={this.state.jwt} fetchUpdatedUserData={this.fetchUpdatedUserData} fetchUploadedFileWithIngredients={this.fetchUploadedFileWithIngredients}/>
+              {
+                this.state.userData && this.state.userData.login ? <FileUploader uploadedImageUrl={this.state.uploadedImageUrl} ingredients={this.state.ingredients} fetchUpdatedUserData={this.fetchUpdatedUserData} /> : <BeforeLogin />
+              }
+              <FileListing userData={this.state.userData} jwt={this.state.jwt} fetchUpdatedUserData={this.fetchUpdatedUserData} fetchUploadedFileWithIngredients={this.fetchUploadedFileWithIngredients} />
             </UserData>
           </layoutContext.Provider>
         )}
